@@ -1,33 +1,49 @@
 import os
 import random
 import time
+import json
+import subprocess
 
+# ANSI color codes and cryptocurrencies
+CRYPTO_COLORS = {
+    'BTC': '\033[38;5;208m',  # Orange
+    'ETH': '\033[34m',        # Blue
+    'LTC': '\033[33m',        # Yellow
+    'BCH': '\033[38;5;130m',  # Brown
+    'RESET': '\033[0m'        # Reset to default color
+}
 
-#outputs a list of data related to the cryptos listed  below
-#to kill process ctrl + c 
-cryptoList = ['BTC','ETH','LTC','BCH']
+# API URL components
+url = "https://api.coinbase.com/v2/prices/"
+eur = "-EUR/buy"
+usd = "-USD/buy"
 
-#gets the api info
-url="https://api.coinbase.com/v2/prices/"
-eur="-EUR/buy"
-usd="-USD/buy"
-out = ""
-EXIT=0
+EXIT = 0
 
 while EXIT == 0:
-	try:
-		for name in cryptoList:
-			out = url + name
-			os.system("curl " + out+eur)
-			print("\b")
-			os.system("curl " + out+usd)
-			print("\n")
+    try:
+        for name, color in CRYPTO_COLORS.items():
+            if name == 'RESET':
+                continue  # Skip the RESET color entry
+            
+            out = url + name
+            
+            # For EUR
+            result = subprocess.run(["curl", "-s", out+eur], capture_output=True, text=True)
+            data = json.loads(result.stdout)
+            print(f"\n{color} ==> {name}-EUR: {data['data']['amount']}{CRYPTO_COLORS['RESET']}")
 
-			time.sleep(1)
-			if random.randint(0,10) > 7:
-				os.system("fortune") #displays a pseudorandom sentence, just for the comedic effect, ha ha. 
-				print("\n")
-
+            # For USD
+            result = subprocess.run(["curl", "-s", out+usd], capture_output=True, text=True)
+            data = json.loads(result.stdout)
+            print(f"{color} ==> {name}-USD: {data['data']['amount']}{CRYPTO_COLORS['RESET']}")
 		
-	except KeyboardInterrupt:
-		EXIT=1
+            time.sleep(0.1)
+            if random.randint(0,10) > 9:
+                print("\n")
+                os.system("fortune")
+                print("\n")
+
+
+    except KeyboardInterrupt:
+        EXIT = 1
